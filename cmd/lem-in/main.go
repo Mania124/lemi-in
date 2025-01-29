@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -20,6 +21,8 @@ func main() {
 	io.WriteString(os.Stdout, fcontent)
 
 	// extract number of ants and room-numbers with connections
+	colony := api.ColonY(fcontent)
+	fmt.Println(colony)
 	// find paths then filter most efficient paths
 	// move the ants and display result
 }
