@@ -22,7 +22,10 @@ func main() {
 
 	// extract number of ants and room-numbers with connections
 	colony := api.ColonY(fcontent)
-	fmt.Println(colony)
+	fmt.Printf("number of ant:%d\n", colony.NummberOfAnts)
+	for _, room := range colony.Rooms {
+		fmt.Println(*room)
+	}
 	// find paths then filter most efficient paths
 	// move the ants and display result
 }

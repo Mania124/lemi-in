@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -16,8 +15,8 @@ type Room struct {
 }
 
 type Colony struct {
-	nummberOfAnts int
-	rooms         []*Room
+	NummberOfAnts int
+	Rooms         []*Room
 }
 
 func NewRoom() *Room {
@@ -32,8 +31,8 @@ func NewRoom() *Room {
 
 func NewColony() *Colony {
 	return &Colony{
-		nummberOfAnts: 0,
-		rooms:         nil,
+		NummberOfAnts: 0,
+		Rooms:         nil,
 	}
 }
 
@@ -49,7 +48,7 @@ func ColonY(content string) *Colony {
 		}
 		if i == 0 {
 
-			colony.nummberOfAnts, err = strconv.Atoi(strings.TrimSpace(ch))
+			colony.NummberOfAnts, err = strconv.Atoi(strings.TrimSpace(ch))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -62,9 +61,9 @@ func ColonY(content string) *Colony {
 				if err != nil {
 					log.Fatal(err)
 				}
-				colony.rooms = append(colony.rooms, room)
-				contentSlice = append(contentSlice[:i], contentSlice[i+2:]...)
-				fmt.Println(room)
+				colony.Rooms = append(colony.Rooms, room)
+				contentSlice = append(contentSlice[:i], contentSlice[i+1:]...)
+				// fmt.Println(room)
 			} else if ch == "##end" {
 				room = NewRoom()
 				room.end = true
@@ -73,8 +72,8 @@ func ColonY(content string) *Colony {
 				if err != nil {
 					log.Fatal(err)
 				}
-				colony.rooms = append(colony.rooms, room)
-				fmt.Println(room)
+				colony.Rooms = append(colony.Rooms, room)
+				// fmt.Println(room)
 				contentSlice = contentSlice[i+2:]
 				// fmt.Println()
 				// fmt.Println(strings.Join(contentSlice, "\n"))
@@ -88,8 +87,9 @@ func ColonY(content string) *Colony {
 				if err != nil {
 					log.Fatal(err)
 				}
-				colony.rooms = append(colony.rooms, room)
-				fmt.Println(room)
+				colony.Rooms = append(colony.Rooms, room)
+				// fmt.Println("this works")
+				// fmt.Println(room)
 			}
 		}
 
@@ -98,7 +98,7 @@ func ColonY(content string) *Colony {
 		temp := Split(strings.TrimSpace(word))
 		// fmt.Println(len(temp), "size")
 		// break
-		for _, w := range colony.rooms {
+		for _, w := range colony.Rooms {
 			rmn, _ := strconv.Atoi(temp[0])
 			// fmt.Println(rmn)
 			conn, _ := strconv.Atoi(temp[1])
