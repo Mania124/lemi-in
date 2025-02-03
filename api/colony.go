@@ -83,14 +83,14 @@ func ColonY(content string) (*Colony, int, int) {
 				// fmt.Println()
 				// fmt.Println(strings.Join(contentSlice, "\n"))
 				// fmt.Println(contentSlice)
-				break
 
 			} else {
 				room = NewRoom()
 				temp := strings.Fields(strings.TrimSpace(contentSlice[i]))
 				room.number, err = strconv.Atoi(temp[0])
 				if err != nil {
-					log.Fatal(err)
+					// log.Fatal(err)
+					break
 				}
 				colony.Rooms = append(colony.Rooms, room)
 				// fmt.Println("this works")

@@ -16,6 +16,7 @@ func BFS(graph map[int][]int, start, end int) []int {
 		last := path[len(path)-1]
 
 		if last == end {
+			fmt.Println("Found path:", path)
 			return path
 		}
 
@@ -38,18 +39,31 @@ func BFS(graph map[int][]int, start, end int) []int {
 // Finds all shortest paths from start to end
 func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 	var paths [][]int
+	originalGraph := make(map[int][]int)
+
+	// ✅ Make a deep copy of the original graph
+	for key, val := range graph {
+		originalGraph[key] = append([]int{}, val...)
+	}
+
 	for {
 		path := BFS(graph, start, end)
 		if path == nil {
-			break
+			break // No more paths found
 		}
 		paths = append(paths, path)
-		for _, node := range path {
-			if node != start && node != end {
-				graph[node] = []int{}
-			}
+
+		// ✅ Instead of wiping out nodes, only disable the most recently found path
+		for i := 1; i < len(path)-1; i++ {
+			graph[path[i]] = []int{} // Prevent reuse of this exact path
 		}
 	}
+
+	// ✅ Restore the original graph after finding paths
+	for key := range graph {
+		graph[key] = originalGraph[key]
+	}
+
 	return paths
 }
 
