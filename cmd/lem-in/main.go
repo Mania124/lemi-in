@@ -30,5 +30,9 @@ func main() {
 	paths := api.FindAllPaths(graph, start, end)
 	// fmt.Println(paths)
 	// move the ants and display result
-	fmt.Println(api.DistributeAnts(paths, colony.NumberOfAnts))
+	movement := api.DistributeAnts(paths, colony.NumberOfAnts)
+	fmt.Println(movement)
+	for antID, path := range movement {
+		fmt.Printf("Ant %d takes path %v\n", antID, path)
+	}
 }

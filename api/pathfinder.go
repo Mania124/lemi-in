@@ -2,6 +2,7 @@ package api
 
 import (
 	"container/list"
+	"fmt"
 )
 
 // Edmonds-Karp BFS for finding shortest paths
@@ -54,16 +55,41 @@ func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 
 func DistributeAnts(paths [][]int, numAnts int) map[int][]int {
 	antAssignments := make(map[int][]int)
-	pathUsage := make([]int, len(paths))
+	pathUsage := make([]int, len(paths)) // Tracks how many ants are assigned to each path
+
+	// ✅ Debugging: Print available paths
+	fmt.Println("Available Paths:", paths)
 
 	for antID := 1; antID <= numAnts; antID++ {
-		for i, path := range paths {
-			if i+1 <len(paths) && len(path)-1+pathUsage[i] < len(paths[i+1])-1+pathUsage[i+1] {
-				antAssignments[antID] = path
+		assigned := false // ✅ Ensure every ant is assigned a path
+
+		for i := 0; i < len(paths); i++ {
+			// ✅ If this is the first ant, assign it to the first path
+			if antID == 1 || i == 0 {
+				antAssignments[antID] = paths[i]
 				pathUsage[i]++
+				assigned = true
+				break
+			}
+
+			// ✅ Ensure `i+1` is within bounds before checking next path
+			if i+1 < len(paths) && (len(paths[i])-1+pathUsage[i] < len(paths[i+1])-1+pathUsage[i+1]) {
+				antAssignments[antID] = paths[i]
+				pathUsage[i]++
+				assigned = true
 				break
 			}
 		}
+
+		// ✅ If no path was selected (should not happen), assign the first path
+		if !assigned {
+			antAssignments[antID] = paths[0]
+			pathUsage[0]++
+		}
 	}
+
+	// ✅ Debugging: Print final assignments
+	// fmt.Println("Ant Assignments:", antAssignments)
+
 	return antAssignments
 }
