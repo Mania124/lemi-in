@@ -21,11 +21,14 @@ func main() {
 	io.WriteString(os.Stdout, fcontent)
 
 	// extract number of ants and room-numbers with connections
-	colony := api.ColonY(fcontent)
-	fmt.Printf("number of ant:%d\n", colony.NummberOfAnts)
-	for _, room := range colony.Rooms {
-		fmt.Println(*room)
-	}
+	colony, start, end := api.ColonY(fcontent)
+	// fmt.Println(start, end)
+	// fmt.Printf("number of ant:%d\n", colony.NumberOfAnts)
+	graph := api.BuildGraph(colony)
+	// fmt.Println(graph)
 	// find paths then filter most efficient paths
+	paths := api.FindAllPaths(graph, start, end)
+	// fmt.Println(paths)
 	// move the ants and display result
+	fmt.Println(api.DistributeAnts(paths, colony.NumberOfAnts))
 }

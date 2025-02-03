@@ -15,8 +15,8 @@ type Room struct {
 }
 
 type Colony struct {
-	NummberOfAnts int
-	Rooms         []*Room
+	NumberOfAnts int
+	Rooms        []*Room
 }
 
 func NewRoom() *Room {
@@ -31,24 +31,26 @@ func NewRoom() *Room {
 
 func NewColony() *Colony {
 	return &Colony{
-		NummberOfAnts: 0,
-		Rooms:         nil,
+		NumberOfAnts: 0,
+		Rooms:        nil,
 	}
 }
 
-func ColonY(content string) *Colony {
+func ColonY(content string) (*Colony, int, int) {
 	// var count int = 0
 	colony := NewColony()
 	var room *Room
+	var start int
+	var end int
 	var err error
 	contentSlice := strings.Split(strings.TrimSpace(content), "\n")
 	for i, ch := range contentSlice {
-		if ch[0] == '#' && ch[1] != '#' {
+		if strings.HasPrefix(ch, "#") && !strings.HasPrefix(ch, "##") {
 			continue
 		}
 		if i == 0 {
 
-			colony.NummberOfAnts, err = strconv.Atoi(strings.TrimSpace(ch))
+			colony.NumberOfAnts, err = strconv.Atoi(strings.TrimSpace(ch))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -58,10 +60,12 @@ func ColonY(content string) *Colony {
 				room.start = true
 				temp := strings.Fields(strings.TrimSpace(contentSlice[i+1]))
 				room.number, err = strconv.Atoi(temp[0])
+				start = room.number
 				if err != nil {
 					log.Fatal(err)
 				}
 				colony.Rooms = append(colony.Rooms, room)
+				// continue
 				contentSlice = append(contentSlice[:i], contentSlice[i+1:]...)
 				// fmt.Println(room)
 			} else if ch == "##end" {
@@ -69,6 +73,7 @@ func ColonY(content string) *Colony {
 				room.end = true
 				temp := strings.Fields(strings.TrimSpace(contentSlice[i+1]))
 				room.number, err = strconv.Atoi(temp[0])
+				end = room.number
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -98,6 +103,9 @@ func ColonY(content string) *Colony {
 		temp := Split(strings.TrimSpace(word))
 		// fmt.Println(len(temp), "size")
 		// break
+		if len(temp) < 2 {
+			continue
+		}
 		for _, w := range colony.Rooms {
 			rmn, _ := strconv.Atoi(temp[0])
 			// fmt.Println(rmn)
@@ -107,5 +115,15 @@ func ColonY(content string) *Colony {
 			}
 		}
 	}
-	return colony
+	return colony, start, end
+}
+
+func BuildGraph(colony *Colony) map[int][]int {
+	graph := make(map[int][]int)
+
+	for _, room := range colony.Rooms {
+		graph[room.number] = room.connections
+	}
+
+	return graph
 }
