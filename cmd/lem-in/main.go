@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 
@@ -11,28 +10,25 @@ import (
 
 func main() {
 	if len(os.Args) != 2 {
-		return
+		log.Fatal("Usage: go run main.go <filename>")
 	}
-	// Readfile
+
 	fcontent, err := api.ReadFile(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
-	io.WriteString(os.Stdout, fcontent)
 
-	// extract number of ants and room-numbers with connections
 	colony, start, end := api.ColonY(fcontent)
-	// fmt.Println(start, end)
-	// fmt.Printf("number of ant:%d\n", colony.NumberOfAnts)
+	fmt.Println("Number of Ants:", colony.NumberOfAnts)
+
 	graph := api.BuildGraph(colony)
-	// fmt.Println(graph)
-	// find paths then filter most efficient paths
 	paths := api.FindAllPaths(graph, start, end)
-	// fmt.Println(paths)
-	// move the ants and display result
-	movement := api.DistributeAnts(paths, colony.NumberOfAnts)
-	fmt.Println(movement)
-	for antID, path := range movement {
-		fmt.Printf("Ant %d takes path %v\n", antID, path)
+
+	fmt.Println("Paths Found:")
+	for _, path := range paths {
+		fmt.Println(path)
 	}
+
+	moves := api.DistributeAnts(paths, colony.NumberOfAnts)
+	api.MoveAnts(moves)
 }

@@ -3,31 +3,27 @@ package api
 import (
 	"container/list"
 	"fmt"
+	"sort"
+	"strings"
 )
 
-// Edmonds-Karp BFS for finding shortest paths
+// Finds the shortest path using BFS (no global visited)
 func BFS(graph map[int][]int, start, end int) []int {
-	visited := make(map[int]bool)
 	queue := list.New()
 	queue.PushBack([]int{start})
 
 	for queue.Len() > 0 {
-		path := queue.Remove(queue.Front()).([]int)
-		last := path[len(path)-1]
+		currentPath := queue.Remove(queue.Front()).([]int)
+		lastNode := currentPath[len(currentPath)-1]
 
-		if last == end {
-			fmt.Println("Found path:", path)
-			return path
+		if lastNode == end {
+			return currentPath
 		}
 
-		if visited[last] {
-			continue
-		}
-		visited[last] = true
-
-		for _, neighbor := range graph[last] {
-			if !visited[neighbor] {
-				newPath := append([]int{}, path...) // Copy path
+		// Explore neighbors not already in the current path (prevents cycles)
+		for _, neighbor := range graph[lastNode] {
+			if !contains(currentPath, neighbor) {
+				newPath := append([]int{}, currentPath...)
 				newPath = append(newPath, neighbor)
 				queue.PushBack(newPath)
 			}
@@ -36,74 +32,111 @@ func BFS(graph map[int][]int, start, end int) []int {
 	return nil
 }
 
-// Finds all shortest paths from start to end
+// Finds all non-overlapping paths by blocking nodes in found paths
 func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 	var paths [][]int
-	originalGraph := make(map[int][]int)
-
-	// ✅ Make a deep copy of the original graph
-	for key, val := range graph {
-		originalGraph[key] = append([]int{}, val...)
-	}
+	tempGraph := copyGraph(graph) // Create a modifiable copy of the graph
 
 	for {
-		path := BFS(graph, start, end)
+		path := BFS(tempGraph, start, end)
 		if path == nil {
-			break // No more paths found
+			break // No more paths
 		}
 		paths = append(paths, path)
 
-		// ✅ Instead of wiping out nodes, only disable the most recently found path
+		// Block intermediate nodes in this path (node-disjoint paths)
 		for i := 1; i < len(path)-1; i++ {
-			graph[path[i]] = []int{} // Prevent reuse of this exact path
-		}
-	}
+			nodeToBlock := path[i]
+			delete(tempGraph, nodeToBlock) // Remove the node from the graph
 
-	// ✅ Restore the original graph after finding paths
-	for key := range graph {
-		graph[key] = originalGraph[key]
+			// Remove references to the blocked node in other nodes' connections
+			for u := range tempGraph {
+				var newNeighbors []int
+				for _, v := range tempGraph[u] {
+					if v != nodeToBlock {
+						newNeighbors = append(newNeighbors, v)
+					}
+				}
+				tempGraph[u] = newNeighbors
+			}
+		}
 	}
 
 	return paths
 }
 
-func DistributeAnts(paths [][]int, numAnts int) map[int][]int {
-	antAssignments := make(map[int][]int)
-	pathUsage := make([]int, len(paths)) // Tracks how many ants are assigned to each path
+// Helper to deep-copy the graph
+func copyGraph(original map[int][]int) map[int][]int {
+	copied := make(map[int][]int)
+	for u, neighbors := range original {
+		copied[u] = append([]int{}, neighbors...)
+	}
+	return copied
+}
 
-	// ✅ Debugging: Print available paths
-	fmt.Println("Available Paths:", paths)
+// Helper function to check if a value exists in a slice
+func contains(slice []int, value int) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+// Distributes ants optimally across paths
+func DistributeAnts(paths [][]int, numAnts int) map[int][]int {
+	// Sort paths by length (ascending)
+	sort.Slice(paths, func(i, j int) bool {
+		return len(paths[i]) < len(paths[j])
+	})
+
+	antAssignments := make(map[int][]int)
+	pathLoads := make([]int, len(paths))
 
 	for antID := 1; antID <= numAnts; antID++ {
-		assigned := false // ✅ Ensure every ant is assigned a path
+		bestPath := 0
+		minCost := len(paths[0]) + pathLoads[0]
 
-		for i := 0; i < len(paths); i++ {
-			// ✅ If this is the first ant, assign it to the first path
-			if antID == 1 || i == 0 {
-				antAssignments[antID] = paths[i]
-				pathUsage[i]++
-				assigned = true
-				break
-			}
-
-			// ✅ Ensure `i+1` is within bounds before checking next path
-			if i+1 < len(paths) && (len(paths[i])-1+pathUsage[i] < len(paths[i+1])-1+pathUsage[i+1]) {
-				antAssignments[antID] = paths[i]
-				pathUsage[i]++
-				assigned = true
-				break
+		// Find the path with the lowest cost (length + current load)
+		for i := 1; i < len(paths); i++ {
+			cost := len(paths[i]) + pathLoads[i]
+			if cost < minCost {
+				minCost = cost
+				bestPath = i
 			}
 		}
 
-		// ✅ If no path was selected (should not happen), assign the first path
-		if !assigned {
-			antAssignments[antID] = paths[0]
-			pathUsage[0]++
+		antAssignments[antID] = paths[bestPath]
+		pathLoads[bestPath]++
+	}
+
+	return antAssignments
+}
+
+// Simulates ant movements step-by-step
+func MoveAnts(antAssignments map[int][]int) {
+	maxSteps := 0
+	antSteps := make(map[int]int) // Tracks each ant's current step
+
+	// Determine max steps needed
+	for _, path := range antAssignments {
+		if len(path)-1 > maxSteps {
+			maxSteps = len(path) - 1
 		}
 	}
 
-	// ✅ Debugging: Print final assignments
-	// fmt.Println("Ant Assignments:", antAssignments)
-
-	return antAssignments
+	// Simulate each step
+	for step := 0; step < maxSteps; step++ {
+		var moves []string
+		for antID, path := range antAssignments {
+			if antSteps[antID] < len(path)-1 {
+				antSteps[antID]++
+				moves = append(moves, fmt.Sprintf("L%d-%d", antID, path[antSteps[antID]]))
+			}
+		}
+		if len(moves) > 0 {
+			fmt.Println(strings.Join(moves, " "))
+		}
+	}
 }
