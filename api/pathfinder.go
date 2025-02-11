@@ -117,7 +117,7 @@ func DistributeAnts(paths [][]int, numAnts int) map[int][]int {
 func MoveAnts(antAssignments map[int][]int) {
 	maxSteps := 0
 	antSteps := make(map[int]int) // Tracks each ant's current step
-	
+
 	// Determine max steps needed
 	for _, path := range antAssignments {
 		if len(path)-1 > maxSteps {
