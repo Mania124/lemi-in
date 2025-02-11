@@ -61,7 +61,6 @@ func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 			}
 		}
 	}
-
 	return paths
 }
 
@@ -129,12 +128,30 @@ func MoveAnts(antAssignments map[int][]int) {
 	// Simulate each step
 	for step := 0; step < maxSteps; step++ {
 		var moves []string
+		occupied := make(map[int]bool) // Tracks occupied intermediate rooms for this step
+
+		// First pass: Collect valid moves without conflicts
+		tentativeMoves := make(map[int]int) // antID -> nextNode
 		for antID, path := range antAssignments {
 			if antSteps[antID] < len(path)-1 {
-				antSteps[antID]++
-				moves = append(moves, fmt.Sprintf("L%d-%d", antID, path[antSteps[antID]]))
+				nextNode := path[antSteps[antID]+1]
+				tentativeMoves[antID] = nextNode
 			}
 		}
+
+		// Second pass: Commit moves if the room is not occupied (except start/end)
+		for antID, nextNode := range tentativeMoves {
+			path := antAssignments[antID] // Retrieve the path for this ant
+			isStartOrEnd := antSteps[antID] == 0 || nextNode == path[len(path)-1]
+			if isStartOrEnd || !occupied[nextNode] {
+				if !isStartOrEnd {
+					occupied[nextNode] = true // Block intermediate room
+				}
+				antSteps[antID]++
+				moves = append(moves, fmt.Sprintf("L%d-%d", antID, nextNode))
+			}
+		}
+
 		if len(moves) > 0 {
 			fmt.Println(strings.Join(moves, " "))
 		}
