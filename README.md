@@ -97,3 +97,14 @@ The program includes robust error handling for:
 ## Contributing
 
 Feel free to submit issues and enhancement requests.
+
+## Contributors
+
+- mmoffat
+- hshikuku
+- oragwelr
+
+## Repository
+
+[lem-in Repository](https://learn.zone01kisumu.ke/git/hshikuku/lem-in.git)
+
