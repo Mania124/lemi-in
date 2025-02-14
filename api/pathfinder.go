@@ -19,9 +19,8 @@ func BFS(graph map[string][]string, start, end string) []string {
 
 		if lastNode == end {
 			str := strings.Join(currentPath, "")
-			if count[str] {
+			if !count[str] {
 				count[str] = true
-				fmt.Println(currentPath)
 				return currentPath
 			}
 
@@ -54,12 +53,8 @@ func FindAllPaths(graph map[string][]string, start, end string) [][]string {
 
 		// Block nodes in this path except start and end
 		for i := 1; i < len(path)-1; i++ {
-			var nodeToBlock string
-			if i != len(path)-2 {
-				nodeToBlock = path[i]
-			} else {
-				break
-			}
+
+			nodeToBlock := path[i]
 			// Remove the node from the graph
 			for u := range tempGraph {
 				var newNeighbors []string

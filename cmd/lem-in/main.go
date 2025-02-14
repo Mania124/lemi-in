@@ -12,7 +12,6 @@ func main() {
 	if len(os.Args) != 2 {
 		log.Fatal("Usage: go run main.go <filename>")
 	}
-
 	fcontent, err := api.ReadFile(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
