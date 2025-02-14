@@ -3,6 +3,7 @@ package api
 import (
 	"container/list"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -113,6 +114,45 @@ func DistributeAnts(paths [][]string, numAnts int) map[int][]string {
 	}
 
 	return antAssignments
+}
+
+// group ants with similar paths together
+func Ass(assignment map[int][]string) {
+	var tog [][]int
+	var gr []int
+	found := make(map[int]bool)
+	for _, v := range assignment {
+		for key := range assignment {
+			if compareSlices(assignment[key], v) && !found[key] {
+				gr = append(gr, key)
+				found[key] = true
+			}
+		}
+		if len(gr) != 0 {
+			sort.Ints(gr)
+			tog = append(tog, gr)
+			gr = []int{}
+		}
+	}
+	fmt.Println(tog)
+}
+
+// CompareSlices checks if two slices have the same elements and are of the same length.
+func compareSlices[T comparable](slice1, slice2 []T) bool {
+	// Check if the lengths are the same
+	if len(slice1) != len(slice2) {
+		return false
+	}
+
+	// Compare each element
+	for i := 0; i < len(slice1); i++ {
+		if slice1[i] != slice2[i] {
+			return false
+		}
+	}
+
+	// If all elements are the same, return true
+	return true
 }
 
 // Simulates ant movements step-by-step
