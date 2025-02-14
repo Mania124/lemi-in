@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+var count = make(map[string]bool)
+
 // Finds the shortest path using BFS (no global visited)
 func BFS(graph map[string][]string, start, end string) []string {
 	queue := list.New()
@@ -16,7 +18,13 @@ func BFS(graph map[string][]string, start, end string) []string {
 		lastNode := currentPath[len(currentPath)-1]
 
 		if lastNode == end {
-			return currentPath
+			str := strings.Join(currentPath, "")
+			if count[str] {
+				count[str] = true
+				fmt.Println(currentPath)
+				return currentPath
+			}
+
 		}
 
 		// Explore neighbors not already in the current path (prevents cycles)
@@ -46,7 +54,12 @@ func FindAllPaths(graph map[string][]string, start, end string) [][]string {
 
 		// Block nodes in this path except start and end
 		for i := 1; i < len(path)-1; i++ {
-			nodeToBlock := path[i]
+			var nodeToBlock string
+			if i != len(path)-2 {
+				nodeToBlock = path[i]
+			} else {
+				break
+			}
 			// Remove the node from the graph
 			for u := range tempGraph {
 				var newNeighbors []string
