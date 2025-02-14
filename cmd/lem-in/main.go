@@ -34,5 +34,5 @@ func main() {
 
 	moves := api.DistributeAnts(paths, colony.NumberOfAnts)
 	fmt.Println(moves)
-	api.MoveAnts(moves)
+	// api.MoveAnts(moves)
 }
