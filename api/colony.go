@@ -58,7 +58,7 @@ func ColonY(content string) (*Colony, string, string) {
 		} else if line == "##start" || line == "##end" {
 			i++
 			temp := strings.Fields(strings.TrimSpace(contentSlice[i]))
-			roomNumber:=temp[0]
+			roomNumber := temp[0]
 
 			isStart := line == "##start"
 			isEnd := line == "##end"
@@ -73,7 +73,7 @@ func ColonY(content string) (*Colony, string, string) {
 			continue // Connection lines are handled later
 		} else {
 			temp := strings.Fields(strings.TrimSpace(line))
-			roomNumber:=temp[0]
+			roomNumber := temp[0]
 			colony.Rooms = append(colony.Rooms, NewRoom(roomNumber, false, false))
 		}
 	}
@@ -85,8 +85,8 @@ func ColonY(content string) (*Colony, string, string) {
 			continue
 		}
 
-		roomA:= temp[0]
-		roomB:= temp[1]
+		roomA := temp[0]
+		roomB := temp[1]
 
 		for _, room := range colony.Rooms {
 			if room.number == roomA {
