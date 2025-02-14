@@ -3,17 +3,16 @@ package api
 import (
 	"container/list"
 	"fmt"
-	"sort"
 	"strings"
 )
 
 // Finds the shortest path using BFS (no global visited)
-func BFS(graph map[int][]int, start, end int) []int {
+func BFS(graph map[string][]string, start, end string) []string {
 	queue := list.New()
-	queue.PushBack([]int{start})
+	queue.PushBack([]string{start})
 
 	for queue.Len() > 0 {
-		currentPath := queue.Remove(queue.Front()).([]int)
+		currentPath := queue.Remove(queue.Front()).([]string)
 		lastNode := currentPath[len(currentPath)-1]
 
 		if lastNode == end {
@@ -23,7 +22,7 @@ func BFS(graph map[int][]int, start, end int) []int {
 		// Explore neighbors not already in the current path (prevents cycles)
 		for _, neighbor := range graph[lastNode] {
 			if !contains(currentPath, neighbor) {
-				newPath := append([]int{}, currentPath...)
+				newPath := append([]string{}, currentPath...)
 				newPath = append(newPath, neighbor)
 				queue.PushBack(newPath)
 			}
@@ -33,8 +32,8 @@ func BFS(graph map[int][]int, start, end int) []int {
 }
 
 // Finds all non-overlapping paths by blocking nodes in found paths
-func FindAllPaths(graph map[int][]int, start, end int) [][]int {
-	var paths [][]int
+func FindAllPaths(graph map[string][]string, start, end string) [][]string {
+	var paths [][]string
 	tempGraph := copyGraph(graph) // Create a modifiable copy of the graph
 
 	// First try to find shortest paths
@@ -50,7 +49,7 @@ func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 			nodeToBlock := path[i]
 			// Remove the node from the graph
 			for u := range tempGraph {
-				var newNeighbors []int
+				var newNeighbors []string
 				for _, v := range tempGraph[u] {
 					if v != nodeToBlock {
 						newNeighbors = append(newNeighbors, v)
@@ -65,66 +64,66 @@ func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 }
 
 // Distributes ants optimally across paths
-func DistributeAnts(paths [][]int, numAnts int) map[int][]int {
-	antAssignments := make(map[int][]int)
-	
-	// Find paths starting with rooms 2 and 3
-	var path2, path3 []int
-	for _, path := range paths {
-		if len(path) > 1 {
-			if path[1] == 2 {
-				path2 = path
-			} else if path[1] == 3 {
-				path3 = path
-			}
-		}
-	}
+// func DistributeAnts(paths [][]string, numAnts int) map[string][]string {
+// 	antAssignments := make(map[string][]string)
 
-	// Check if this is the complex graph (with rooms 4,5,6,7)
-	isComplexGraph := false
-	for _, path := range paths {
-		for _, node := range path {
-			if node >= 4 { // If we find nodes 4 or higher, it's the complex graph
-				isComplexGraph = true
-				break
-			}
-		}
-		if isComplexGraph {
-			break
-		}
-	}
+// 	// Find paths starting with rooms 2 and 3
+// 	var path2, path3 []int
+// 	for _, path := range paths {
+// 		if len(path) > 1 {
+// 			if path[1] == 2 {
+// 				path2 = path
+// 			} else if path[1] == 3 {
+// 				path3 = path
+// 			}
+// 		}
+// 	}
 
-	// Assign paths to ants based on graph type
-	if path2 != nil && path3 != nil {
-		if isComplexGraph {
-			// For complex graph:
-			// Ant 1: path through 3
-			// Ant 2: path through 2
-			// Ant 3: path through 3
-			antAssignments[1] = path3
-			antAssignments[2] = path2
-			antAssignments[3] = path3
-		} else {
-			// For simple graph:
-			// Ant 1: path through 2
-			// Ant 2: path through 3
-			// Ant 3: path through 2
-			antAssignments[1] = path2
-			antAssignments[2] = path3
-			antAssignments[3] = path2
-		}
-	} else {
-		// Fallback to shortest path
-		sort.Slice(paths, func(i, j int) bool {
-			return len(paths[i]) < len(paths[j])
-		})
-		for antID := 1; antID <= numAnts; antID++ {
-			antAssignments[antID] = paths[0]
-		}
-	}
+// 	// Check if this is the complex graph (with rooms 4,5,6,7)
+// 	isComplexGraph := false
+// 	for _, path := range paths {
+// 		for _, node := range path {
+// 			if node >= 4 { // If we find nodes 4 or higher, it's the complex graph
+// 				isComplexGraph = true
+// 				break
+// 			}
+// 		}
+// 		if isComplexGraph {
+// 			break
+// 		}
+// 	}
 
-	return antAssignments
-}
+// 	// Assign paths to ants based on graph type
+// 	if path2 != nil && path3 != nil {
+// 		if isComplexGraph {
+// 			// For complex graph:
+// 			// Ant 1: path through 3
+// 			// Ant 2: path through 2
+// 			// Ant 3: path through 3
+// 			antAssignments[1] = path3
+// 			antAssignments[2] = path2
+// 			antAssignments[3] = path3
+// 		} else {
+// 			// For simple graph:
+// 			// Ant 1: path through 2
+// 			// Ant 2: path through 3
+// 			// Ant 3: path through 2
+// 			antAssignments[1] = path2
+// 			antAssignments[2] = path3
+// 			antAssignments[3] = path2
+// 		}
+// 	} else {
+// 		// Fallback to shortest path
+// 		sort.Slice(paths, func(i, j int) bool {
+// 			return len(paths[i]) < len(paths[j])
+// 		})
+// 		for antID := 1; antID <= numAnts; antID++ {
+// 			antAssignments[antID] = paths[0]
+// 		}
+// 	}
+
+// 	return antAssignments
+// }
 
 // Simulates ant movements step-by-step
 func MoveAnts(antAssignments map[int][]int) {
@@ -144,7 +143,7 @@ func MoveAnts(antAssignments map[int][]int) {
 		// Process ants in order
 		for antID := 1; antID <= len(antAssignments); antID++ {
 			path := antAssignments[antID]
-			
+
 			// Skip if ant has reached the end
 			if antSteps[antID] >= len(path)-1 {
 				continue
@@ -185,16 +184,16 @@ func MoveAnts(antAssignments map[int][]int) {
 }
 
 // Helper to deep-copy the graph
-func copyGraph(original map[int][]int) map[int][]int {
-	copied := make(map[int][]int)
+func copyGraph(original map[string][]string) map[string][]string {
+	copied := make(map[string][]string)
 	for u, neighbors := range original {
-		copied[u] = append([]int{}, neighbors...)
+		copied[u] = append([]string{}, neighbors...)
 	}
 	return copied
 }
 
 // Helper function to check if a value exists in a slice
-func contains(slice []int, value int) bool {
+func contains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
 			return true

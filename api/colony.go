@@ -9,8 +9,8 @@ import (
 type Room struct {
 	start       bool
 	end         bool
-	number      int
-	connections []int
+	number      string
+	connections []string
 }
 
 type Colony struct {
@@ -19,12 +19,12 @@ type Colony struct {
 }
 
 // Creates a new room
-func NewRoom(number int, isStart, isEnd bool) *Room {
+func NewRoom(number string, isStart, isEnd bool) *Room {
 	return &Room{
 		start:       isStart,
 		end:         isEnd,
 		number:      number,
-		connections: []int{},
+		connections: []string{},
 	}
 }
 
@@ -37,9 +37,9 @@ func NewColony() *Colony {
 }
 
 // Parses file content and builds the colony, returning start and end room numbers
-func ColonY(content string) (*Colony, int, int) {
+func ColonY(content string) (*Colony, string, string) {
 	colony := NewColony()
-	var start, end int
+	var start, end string
 	var err error
 
 	contentSlice := strings.Split(strings.TrimSpace(content), "\n")
@@ -58,10 +58,7 @@ func ColonY(content string) (*Colony, int, int) {
 		} else if line == "##start" || line == "##end" {
 			i++
 			temp := strings.Fields(strings.TrimSpace(contentSlice[i]))
-			roomNumber, err := strconv.Atoi(temp[0])
-			if err != nil {
-				log.Fatal("Error parsing start/end room:", err)
-			}
+			roomNumber:=temp[0]
 
 			isStart := line == "##start"
 			isEnd := line == "##end"
@@ -76,10 +73,7 @@ func ColonY(content string) (*Colony, int, int) {
 			continue // Connection lines are handled later
 		} else {
 			temp := strings.Fields(strings.TrimSpace(line))
-			roomNumber, err := strconv.Atoi(temp[0])
-			if err != nil {
-				break
-			}
+			roomNumber:=temp[0]
 			colony.Rooms = append(colony.Rooms, NewRoom(roomNumber, false, false))
 		}
 	}
@@ -91,8 +85,8 @@ func ColonY(content string) (*Colony, int, int) {
 			continue
 		}
 
-		roomA, _ := strconv.Atoi(temp[0])
-		roomB, _ := strconv.Atoi(temp[1])
+		roomA:= temp[0]
+		roomB:= temp[1]
 
 		for _, room := range colony.Rooms {
 			if room.number == roomA {
@@ -108,8 +102,8 @@ func ColonY(content string) (*Colony, int, int) {
 }
 
 // Converts colony into an adjacency list
-func BuildGraph(colony *Colony) map[int][]int {
-	graph := make(map[int][]int)
+func BuildGraph(colony *Colony) map[string][]string {
+	graph := make(map[string][]string)
 	for _, room := range colony.Rooms {
 		graph[room.number] = room.connections
 	}
