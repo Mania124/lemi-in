@@ -163,8 +163,8 @@ func Move(input [][]int, myMap map[int][]string) {
 
 	// Print row by row, accumulating elements
 	for count := 0; ; count++ {
-		line := ""      // Collect output for this row
-		done := true    // Track if all values are exhausted
+		line := ""   // Collect output for this row
+		done := true // Track if all values are exhausted
 
 		for _, v := range input {
 			for j := 0; j <= count && j < len(v); j++ {
