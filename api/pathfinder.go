@@ -9,6 +9,8 @@ import (
 
 var count = make(map[string]bool)
 
+// moved = make(map[int]int)
+
 // Finds the shortest path using BFS (no global visited)
 func BFS(graph map[string][]string, start, end string) []string {
 	queue := list.New()
@@ -75,6 +77,7 @@ func FindAllPaths(graph map[string][]string, start, end string) [][]string {
 // Distributes ants optimally across paths
 func DistributeAnts(paths [][]string, numAnts int) map[int][]string {
 	antAssignments := make(map[int][]string)
+	antAssignment := make(map[int][]string)
 
 	// Calculate the length of each path
 	pathLengths := make([]int, len(paths))
@@ -112,12 +115,15 @@ func DistributeAnts(paths [][]string, numAnts int) map[int][]string {
 			antID++
 		}
 	}
+	for k, v := range antAssignments {
+		antAssignment[k] = v[1:]
+	}
 
-	return antAssignments
+	return antAssignment
 }
 
 // group ants with similar paths together
-func Ass(assignment map[int][]string) {
+func Ass(assignment map[int][]string) [][]int {
 	var tog [][]int
 	var gr []int
 	found := make(map[int]bool)
@@ -134,7 +140,58 @@ func Ass(assignment map[int][]string) {
 			gr = []int{}
 		}
 	}
-	fmt.Println(tog)
+
+	sort.Slice(tog, func(i, j int) bool {
+		return len(tog[i]) > len(tog[j])
+	})
+
+	return tog
+}
+
+// Move prints elements cumulatively row by row.
+func Move(input [][]int, myMap map[int][]string) {
+	// Track how many elements we've used from each key in myMap
+	moved := make(map[int]int)
+
+	// Find max depth (longest list in input)
+	maxLen := 0
+	for _, v := range input {
+		if len(v) > maxLen {
+			maxLen = len(v)
+		}
+	}
+
+	// Print row by row, accumulating elements
+	for count := 0; ; count++ {
+		line := ""      // Collect output for this row
+		done := true    // Track if all values are exhausted
+
+		for _, v := range input {
+			for j := 0; j <= count && j < len(v); j++ {
+				id := v[j] // Current list ID
+
+				// Ensure we do not exceed the mapped values
+				if moved[id] < len(myMap[id]) {
+					if line != "" {
+						line += " " // Add space before next value
+					}
+
+					// Append value to line
+					line += fmt.Sprintf("L%d-%s", id, myMap[id][moved[id]])
+
+					// Move to next element in `myMap`
+					moved[id]++
+					done = false // Not done yet, there is more data
+				}
+			}
+		}
+
+		if done {
+			break // Stop if all elements are exhausted
+		}
+
+		fmt.Println(line) // Print the accumulated row
+	}
 }
 
 // CompareSlices checks if two slices have the same elements and are of the same length.
@@ -154,186 +211,6 @@ func compareSlices[T comparable](slice1, slice2 []T) bool {
 	// If all elements are the same, return true
 	return true
 }
-
-// Simulates ant movements step-by-step
-func MoveAnts(antAssignments map[int][]string) {
-	antSteps := make(map[int]int)    // Tracks each ant's current step
-	antStarted := make(map[int]bool) // Tracks if an ant has started moving
-	finished := false
-
-	// Initialize all ants as not started
-	for antID := range antAssignments {
-		antStarted[antID] = false
-	}
-
-	for !finished {
-		var moves []string
-		occupied := make(map[string]bool) // Tracks occupied rooms for this step
-		finished = true
-
-		// Process ants in order
-		for antID := 1; antID <= len(antAssignments); antID++ {
-			path := antAssignments[antID]
-
-			// Skip if ant has reached the end
-			if antSteps[antID] >= len(path)-1 {
-				continue
-			}
-
-			finished = false // We still have ants to move
-
-			// Check if the ant has started moving
-			if !antStarted[antID] {
-				// Start the ant if the first room is available
-				if !occupied[path[0]] {
-					antStarted[antID] = true
-					antSteps[antID]++ // Move to the first room
-				}
-				continue
-			}
-
-			// Get next position
-			currentPos := antSteps[antID]
-			nextNode := path[currentPos+1]
-
-			// Check if next room is available (or if it's the end room)
-			if !occupied[nextNode] || nextNode == path[len(path)-1] {
-				occupied[nextNode] = true
-				antSteps[antID]++
-
-				// Skip displaying the start room
-				if nextNode != path[0] { // Exclude the start room
-					moves = append(moves, fmt.Sprintf("L%d-%s", antID, nextNode))
-				}
-			}
-		}
-
-		// Print moves for this step
-		if len(moves) > 0 {
-			fmt.Println(strings.Join(moves, " "))
-		}
-	}
-}
-
-// Distributes ants optimally across paths
-// func DistributeAnts(paths [][]string, numAnts int) map[string][]string {
-// 	antAssignments := make(map[string][]string)
-
-// 	// Find paths starting with rooms 2 and 3
-// 	var path2, path3 []int
-// 	for _, path := range paths {
-// 		if len(path) > 1 {
-// 			if path[1] == 2 {
-// 				path2 = path
-// 			} else if path[1] == 3 {
-// 				path3 = path
-// 			}
-// 		}
-// 	}
-
-// 	// Check if this is the complex graph (with rooms 4,5,6,7)
-// 	isComplexGraph := false
-// 	for _, path := range paths {
-// 		for _, node := range path {
-// 			if node >= 4 { // If we find nodes 4 or higher, it's the complex graph
-// 				isComplexGraph = true
-// 				break
-// 			}
-// 		}
-// 		if isComplexGraph {
-// 			break
-// 		}
-// 	}
-
-// 	// Assign paths to ants based on graph type
-// 	if path2 != nil && path3 != nil {
-// 		if isComplexGraph {
-// 			// For complex graph:
-// 			// Ant 1: path through 3
-// 			// Ant 2: path through 2
-// 			// Ant 3: path through 3
-// 			antAssignments[1] = path3
-// 			antAssignments[2] = path2
-// 			antAssignments[3] = path3
-// 		} else {
-// 			// For simple graph:
-// 			// Ant 1: path through 2
-// 			// Ant 2: path through 3
-// 			// Ant 3: path through 2
-// 			antAssignments[1] = path2
-// 			antAssignments[2] = path3
-// 			antAssignments[3] = path2
-// 		}
-// 	} else {
-// 		// Fallback to shortest path
-// 		sort.Slice(paths, func(i, j int) bool {
-// 			return len(paths[i]) < len(paths[j])
-// 		})
-// 		for antID := 1; antID <= numAnts; antID++ {
-// 			antAssignments[antID] = paths[0]
-// 		}
-// 	}
-
-// 	return antAssignments
-// }
-
-// Simulates ant movements step-by-step
-// func MoveAnts(antAssignments map[int][]int) {
-// 	antSteps := make(map[int]int)    // Tracks each ant's current step
-// 	antStarted := make(map[int]bool) // Tracks if an ant has started moving
-// 	finished := false
-
-// 	// Start first two ants immediately
-// 	antStarted[1] = true
-// 	antStarted[2] = true
-
-// 	for !finished {
-// 		var moves []string
-// 		occupied := make(map[int]bool) // Tracks occupied rooms for this step
-// 		finished = true
-
-// 		// Process ants in order
-// 		for antID := 1; antID <= len(antAssignments); antID++ {
-// 			path := antAssignments[antID]
-
-// 			// Skip if ant has reached the end
-// 			if antSteps[antID] >= len(path)-1 {
-// 				continue
-// 			}
-
-// 			finished = false // We still have ants to move
-
-// 			// Start ant 3 only after both ant 1 and 2 have moved one step
-// 			if antID == 3 && !antStarted[3] {
-// 				if antSteps[1] > 0 && antSteps[2] > 0 {
-// 					antStarted[3] = true
-// 				} else {
-// 					continue
-// 				}
-// 			}
-
-// 			// Skip if ant hasn't started
-// 			if !antStarted[antID] {
-// 				continue
-// 			}
-
-// 			// Get next position
-// 			currentPos := antSteps[antID]
-// 			nextNode := path[currentPos+1]
-
-// 			// Check if next room is available
-// 			if !occupied[nextNode] || nextNode == path[len(path)-1] {
-// 				occupied[nextNode] = true
-// 				antSteps[antID]++
-// 				moves = append(moves, fmt.Sprintf("L%d-%d", antID, nextNode))
-// 			}
-// 		}
-
-// 		if len(moves) > 0 {
-// 			fmt.Println(strings.Join(moves, " "))
-// 		}
-// 	}
-// }
 
 // Helper to deep-copy the graph
 func copyGraph(original map[string][]string) map[string][]string {

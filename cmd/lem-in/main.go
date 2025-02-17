@@ -27,13 +27,15 @@ func main() {
 		return
 	}
 	fmt.Println(fcontent)
-	fmt.Println("Paths Found:")
-	for _, path := range paths {
-		fmt.Println(path)
-	}
+	// fmt.Println("Paths Found:")
+	// for _, path := range paths {
+	// 	fmt.Println(path)
+	// }
 
 	moves := api.DistributeAnts(paths, colony.NumberOfAnts)
-	fmt.Println(moves)
-	api.Ass(moves)
+	// fmt.Println(moves)
+	tog := api.Ass(moves)
+	// fmt.Println(tog)
+	api.Move(tog, moves)
 	// api.MoveAnts(moves)
 }
