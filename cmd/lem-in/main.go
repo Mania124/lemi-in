@@ -19,7 +19,13 @@ func main() {
 		return
 	}
 
-	colony, start, end := api.ColonY(fcontent)
+	// Updated to handle the 4 return values from ColonY
+	colony, start, end, err := api.ColonY(fcontent)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+		return
+	}
+
 	if colony.NumberOfAnts <= 0 {
 		fmt.Println("ERROR: invalid number of Ants")
 		return
