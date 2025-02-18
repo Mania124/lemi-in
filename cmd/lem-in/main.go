@@ -34,7 +34,7 @@ func main() {
 
 	moves := api.DistributeAnts(paths, colony.NumberOfAnts)
 	// fmt.Println(moves)
-	tog := api.Ass(moves)
+	tog := api.AssignGroups(moves)
 	// fmt.Println(tog)
 	api.Move(tog, moves)
 	// api.MoveAnts(moves)

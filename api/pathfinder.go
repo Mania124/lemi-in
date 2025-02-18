@@ -74,56 +74,40 @@ func FindAllPaths(graph map[string][]string, start, end string) [][]string {
 	return paths
 }
 
-// Distributes ants optimally across paths
+// Distributes ants fairly, prioritizing shorter paths when possible
 func DistributeAnts(paths [][]string, numAnts int) map[int][]string {
-	antAssignments := make(map[int][]string)
-	antAssignment := make(map[int][]string)
+	antAssignments := make(map[int][]string) // Tracks assigned paths per ant
+	antsPerPath := make([]int, len(paths))   // Tracks number of ants per path
+	pathLengths := make([]int, len(paths))   // Store each path’s length
 
-	// Calculate the length of each path
-	pathLengths := make([]int, len(paths))
+	// Get the length of each path
 	for i, path := range paths {
-		pathLengths[i] = len(path)
+		pathLengths[i] = len(path) - 1 // Exclude starting node "0"
 	}
 
-	// Calculate the number of ants to assign to each path
-	antsPerPath := make([]int, len(paths))
-	remainingAnts := numAnts
-
-	// Distribute ants to paths based on their lengths
-	for remainingAnts > 0 {
-		// Find the path with the minimum (length + ants already assigned)
+	// Assign ants dynamically, always preferring the least burdened shortest path
+	for antID := 1; antID <= numAnts; antID++ {
 		minIndex := 0
-		minValue := pathLengths[0] + antsPerPath[0]
+		minLoad := antsPerPath[0] + pathLengths[0] // Consider path length + current load
+
 		for i := 1; i < len(paths); i++ {
-			currentValue := pathLengths[i] + antsPerPath[i]
-			if currentValue < minValue {
+			currentLoad := antsPerPath[i] + pathLengths[i]
+			if currentLoad < minLoad {
 				minIndex = i
-				minValue = currentValue
+				minLoad = currentLoad
 			}
 		}
 
-		// Assign one ant to the selected path
-		antsPerPath[minIndex]++
-		remainingAnts--
+		// Assign ant to the selected shortest available path
+		antAssignments[antID] = paths[minIndex][1:]
+		antsPerPath[minIndex]++ // Increase load for this path
 	}
 
-	// Assign ants to paths based on the calculated distribution
-	antID := 1
-	for i, ants := range antsPerPath {
-		for j := 0; j < ants; j++ {
-			antAssignments[antID] = paths[i]
-			antID++
-		}
-	}
-	for k, v := range antAssignments {
-		antAssignment[k] = v[1:]
-	}
-
-	return antAssignment
+	return antAssignments
 }
 
 // group ants with similar paths together
-func Ass(assignment map[int][]string) [][]int {
+func AssignGroups(assignment map[int][]string) [][]int {
 	var tog [][]int
 	var gr []int
 	found := make(map[int]bool)
@@ -142,9 +126,8 @@ func Ass(assignment map[int][]string) [][]int {
 	}
 
 	sort.Slice(tog, func(i, j int) bool {
-		return len(tog[i]) > len(tog[j])
+		return len(tog[i]) > len(tog[j]) || tog[i][0] < tog[j][0]
 	})
-
 	return tog
 }
 
