@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"lem-in/api"
 )
@@ -13,16 +14,34 @@ func main() {
 		log.Fatal("Usage: go run main.go <filename>")
 	}
 	fcontent, err := api.ReadFile(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
+	if err != nil || len(strings.TrimSpace(fcontent)) == 0 {
+		fmt.Println("ERROR: invalid data format")
+		return
 	}
 
 	colony, start, end := api.ColonY(fcontent)
+	if colony.NumberOfAnts <= 0 {
+		fmt.Println("ERROR: invalid number of Ants")
+		return
+	}
+	if start == "" || end == "" {
+		if start == "" && len(end) != 0 {
+			fmt.Println("ERROR: invalid data format, no start room found")
+			return
+		}
+		if end == "" && len(start) != 0 {
+			fmt.Println("ERROR: invalid data format, no end room found")
+			return
+		}
+		fmt.Println("ERROR: invalid data format, no start and end room found")
+		return
+	}
+
 	// fmt.Println("Number of Ants:", colony.NumberOfAnts)
 
 	graph := api.BuildGraph(colony)
 	paths := api.FindAllPaths(graph, start, end)
-	if len(paths) == 0 || colony.NumberOfAnts == 0 {
+	if len(paths) == 0 {
 		fmt.Println("ERROR: invalid data format")
 		return
 	}

@@ -55,7 +55,7 @@ func ColonY(content string) (*Colony, string, string) {
 			if err != nil {
 				log.Fatal("Error parsing number of ants:", err)
 			}
-		} else if line == "##start" || line == "##end" {
+		} else if (line == "##start" || line == "##end") && i != len(contentSlice)-1 {
 			i++
 			temp := strings.Fields(strings.TrimSpace(contentSlice[i]))
 			roomNumber := temp[0]
