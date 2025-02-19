@@ -15,6 +15,33 @@ The program reads a map of an ant farm from a file and finds the optimal paths t
 - Prevents room congestion during ant movement
 - Outputs ant movements in a clear, readable format
 
+## Project Structure
+
+```
+lem-in/
+├── api/
+│   ├── colony.go       # Colony and room structures
+│   ├── pathfinder.go   # Path finding and ant movement logic
+│   ├── reader.go       # Input file parsing
+│   ├── validator.go    # Validation functions
+│   └── customsplit.go  # Custom string splitting functions
+├── cmd/
+│   └── lem-in/
+│       └── main.go     # Main program entry
+├── test/
+│   ├── api/
+│   │   ├── colony_test.go
+│   │   ├── pathfinder_test.go
+│   │   ├── reader_test.go
+│   │   ├── validator_test.go
+│   │   └── customsplit_test.go
+│   └── test_files/
+│       ├── text.txt
+│       └── test1.txt
+├── LICENSE
+└── README.md
+```
+
 ## Usage
 
 ```bash
@@ -49,51 +76,6 @@ Example:
 2-3
 ```
 
-### Output Format
-
-The program outputs the input data followed by the ant movements:
-```
-L<ant_number>-<room_number>
-```
-
-Example output:
-```
-L1-2 L2-3
-L1-1 L2-1 L3-2
-L3-1
-```
-
-## Implementation Details
-
-- Uses Breadth-First Search for pathfinding
-- Implements node-disjoint path finding
-- Optimizes ant distribution based on path lengths
-- Handles concurrent ant movements efficiently
-- Supports both simple and complex graph configurations
-
-## Project Structure
-
-```
-lem-in/
-├── api/
-│   ├── colony.go       # Colony and room structures
-│   ├── pathfinder.go   # Path finding and ant movement logic
-│   └── reader.go       # Input file parsing
-├── cmd/
-│   └── lem-in/
-│       └── main.go     # Main program entry
-└── README.md
-```
-
-## Error Handling
-
-The program includes robust error handling for:
-- Invalid file formats
-- Missing start/end rooms
-- Invalid room connections
-- Invalid number of ants
-- Unreachable end room
-
 ## Contributing
 
 Feel free to submit issues and enhancement requests.
@@ -107,4 +89,5 @@ Feel free to submit issues and enhancement requests.
 ## Repository
 
 [lem-in Repository](https://learn.zone01kisumu.ke/git/hshikuku/lem-in.git)
+```
 
