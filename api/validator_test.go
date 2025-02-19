@@ -6,9 +6,9 @@ import (
 
 func TestValidateStartEndRooms(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		start, end string
-		expectErr bool
+		expectErr  bool
 	}{
 		{"Both missing", "", "", true},
 		{"Missing start", "", "end", true},
