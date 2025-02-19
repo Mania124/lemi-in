@@ -17,7 +17,8 @@ The program reads a map of an ant farm from a file and finds the optimal paths t
 
 ## Project Structure
 
-```
+```bash
+
 lem-in/
 ├── api/
 │   ├── colony.go       # Colony and room structures
@@ -51,7 +52,8 @@ go run cmd/lem-in/main.go <filename>
 ### Input File Format
 
 The input file should follow this format:
-```
+
+```bash
 <number_of_ants>
 <room_definitions>
 ##start
@@ -62,7 +64,8 @@ The input file should follow this format:
 ```
 
 Example:
-```
+
+```bash
 3
 ##start
 0 1 2
@@ -89,5 +92,3 @@ Feel free to submit issues and enhancement requests.
 ## Repository
 
 [lem-in Repository](https://learn.zone01kisumu.ke/git/hshikuku/lem-in.git)
-```
-
