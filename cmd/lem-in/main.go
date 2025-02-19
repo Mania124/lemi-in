@@ -30,37 +30,28 @@ func main() {
 		fmt.Println("ERROR: invalid number of Ants")
 		return
 	}
-	if start == "" || end == "" {
-		if start == "" && len(end) != 0 {
-			fmt.Println("ERROR: invalid data format, no start room found")
-			return
-		}
-		if end == "" && len(start) != 0 {
-			fmt.Println("ERROR: invalid data format, no end room found")
-			return
-		}
-		fmt.Println("ERROR: invalid data format, no start and end room found")
+	if err := api.ValidateStartEndRooms(start, end); err != nil {
+		fmt.Println(err)
+		return
+	}
+	// 4. Validate room definitions
+	if err := api.ValidateRooms(colony); err != nil {
+		fmt.Println(err)
+		return
+	}
+	graph := api.BuildGraph(colony)
+	if err := api.ValidateRoomLinks(graph, colony); err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	// fmt.Println("Number of Ants:", colony.NumberOfAnts)
-
-	graph := api.BuildGraph(colony)
 	paths := api.FindAllPaths(graph, start, end)
 	if len(paths) == 0 {
 		fmt.Println("ERROR: invalid data format")
 		return
 	}
 	fmt.Println(fcontent)
-	// fmt.Println("Paths Found:")
-	// for _, path := range paths {
-	// 	fmt.Println(path)
-	// }
-
 	moves := api.DistributeAnts(paths, colony.NumberOfAnts)
-	// fmt.Println(moves)
 	tog := api.AssignGroups(moves)
-	// fmt.Println(tog)
 	api.Move(tog, moves)
-	// api.MoveAnts(moves)
 }

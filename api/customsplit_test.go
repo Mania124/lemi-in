@@ -11,9 +11,9 @@ func TestSplit(t *testing.T) {
 	}{
 		{"a-b-c", []string{"a", "b", "c"}},
 		{"hello-world", []string{"hello", "world"}},
-		{"a--b", []string{"a", "", "b"}}, // Handling consecutive delimiters
+		{"a--b", []string{"a", "", "b"}},       // Handling consecutive delimiters
 		{"singleword", []string{"singleword"}}, // No delimiter in the string
-		{"", []string{""}}, // Empty string case
+		{"", []string{""}},                     // Empty string case
 	}
 
 	for _, test := range tests {

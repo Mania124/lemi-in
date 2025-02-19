@@ -7,10 +7,11 @@ import (
 )
 
 type Room struct {
-	start       bool
-	end         bool
-	number      string
-	connections []string
+	Start       bool
+	End         bool
+	Number      string
+	Connections []string
+	X, Y        int
 }
 
 type Colony struct {
@@ -20,10 +21,10 @@ type Colony struct {
 
 func NewRoom(number string, isStart, isEnd bool) *Room {
 	return &Room{
-		start:       isStart,
-		end:         isEnd,
-		number:      number,
-		connections: []string{},
+		Start:       isStart,
+		End:         isEnd,
+		Number:      number,
+		Connections: []string{},
 	}
 }
 
@@ -55,11 +56,10 @@ func ColonY(content string) (*Colony, string, string, error) {
 		} else if (line == "##start" || line == "##end") && i != len(contentSlice)-1 {
 			i++
 			temp := strings.Fields(strings.TrimSpace(contentSlice[i]))
-			if len(temp) < 1 {
-				return nil, "", "", fmt.Errorf("invalid room format after start/end")
+			if len(temp) != 3 {
+				return nil, "", "", fmt.Errorf("invalid room format for start/end")
 			}
 			roomNumber := temp[0]
-
 			isStart := line == "##start"
 			isEnd := line == "##end"
 			if isStart {
@@ -67,16 +67,36 @@ func ColonY(content string) (*Colony, string, string, error) {
 			} else {
 				end = roomNumber
 			}
-			colony.Rooms = append(colony.Rooms, NewRoom(roomNumber, isStart, isEnd))
+			room := NewRoom(roomNumber, isStart, isEnd)
+			var e error
+			room.X, e = strconv.Atoi(temp[1])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates for start/end")
+			}
+			room.Y, e = strconv.Atoi(temp[2])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates for start/end")
+			}
+			colony.Rooms = append(colony.Rooms, room)
 		} else if strings.Contains(line, "-") {
 			continue
 		} else {
 			temp := strings.Fields(strings.TrimSpace(line))
-			if len(temp) < 1 {
+			if len(temp) != 3 {
 				return nil, "", "", fmt.Errorf("invalid room format")
 			}
 			roomNumber := temp[0]
-			colony.Rooms = append(colony.Rooms, NewRoom(roomNumber, false, false))
+			room := NewRoom(roomNumber, false, false)
+			var e error
+			room.X, e = strconv.Atoi(temp[1])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates")
+			}
+			room.Y, e = strconv.Atoi(temp[2])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates")
+			}
+			colony.Rooms = append(colony.Rooms, room)
 		}
 	}
 
@@ -89,11 +109,11 @@ func ColonY(content string) (*Colony, string, string, error) {
 			roomA, roomB := parts[0], parts[1]
 
 			for _, room := range colony.Rooms {
-				if room.number == roomA {
-					room.connections = append(room.connections, roomB)
+				if room.Number == roomA {
+					room.Connections = append(room.Connections, roomB)
 				}
-				if room.number == roomB {
-					room.connections = append(room.connections, roomA)
+				if room.Number == roomB {
+					room.Connections = append(room.Connections, roomA)
 				}
 			}
 		}
@@ -105,7 +125,7 @@ func ColonY(content string) (*Colony, string, string, error) {
 func BuildGraph(colony *Colony) map[string][]string {
 	graph := make(map[string][]string)
 	for _, room := range colony.Rooms {
-		graph[room.number] = room.connections
+		graph[room.Number] = room.Connections
 	}
 	return graph
 }

@@ -48,9 +48,9 @@ func TestColonY(t *testing.T) {
 func TestBuildGraph(t *testing.T) {
 	colony := &Colony{
 		Rooms: []*Room{
-			{number: "0", connections: []string{"1"}},
-			{number: "1", connections: []string{"0", "2"}},
-			{number: "2", connections: []string{"1"}},
+			{Number: "0", Connections: []string{"1"}},
+			{Number: "1", Connections: []string{"0", "2"}},
+			{Number: "2", Connections: []string{"1"}},
 		},
 	}
 
