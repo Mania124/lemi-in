@@ -1,16 +1,17 @@
 package api
 
 import (
-	"log"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 type Room struct {
-	start       bool
-	end         bool
-	number      int
-	connections []int
+	Start       bool
+	End         bool
+	Number      string
+	Connections []string
+	X, Y        int
 }
 
 type Colony struct {
@@ -18,17 +19,15 @@ type Colony struct {
 	Rooms        []*Room
 }
 
-// Creates a new room
-func NewRoom(number int, isStart, isEnd bool) *Room {
+func NewRoom(number string, isStart, isEnd bool) *Room {
 	return &Room{
-		start:       isStart,
-		end:         isEnd,
-		number:      number,
-		connections: []int{},
+		Start:       isStart,
+		End:         isEnd,
+		Number:      number,
+		Connections: []string{},
 	}
 }
 
-// Creates a new colony
 func NewColony() *Colony {
 	return &Colony{
 		NumberOfAnts: 0,
@@ -36,11 +35,9 @@ func NewColony() *Colony {
 	}
 }
 
-// Parses file content and builds the colony, returning start and end room numbers
-func ColonY(content string) (*Colony, int, int) {
+func ColonY(content string) (*Colony, string, string, error) {
 	colony := NewColony()
-	var start, end int
-	var err error
+	var start, end string
 
 	contentSlice := strings.Split(strings.TrimSpace(content), "\n")
 
@@ -51,18 +48,18 @@ func ColonY(content string) (*Colony, int, int) {
 		}
 
 		if i == 0 {
-			colony.NumberOfAnts, err = strconv.Atoi(strings.TrimSpace(line))
+			numberOfAnts, err := strconv.Atoi(strings.TrimSpace(line))
 			if err != nil {
-				log.Fatal("Error parsing number of ants:", err)
+				return nil, "", "", fmt.Errorf("invalid number of ants: %w", err)
 			}
-		} else if line == "##start" || line == "##end" {
+			colony.NumberOfAnts = numberOfAnts
+		} else if (line == "##start" || line == "##end") && i != len(contentSlice)-1 {
 			i++
 			temp := strings.Fields(strings.TrimSpace(contentSlice[i]))
-			roomNumber, err := strconv.Atoi(temp[0])
-			if err != nil {
-				log.Fatal("Error parsing start/end room:", err)
+			if len(temp) != 3 {
+				return nil, "", "", fmt.Errorf("invalid room format for start/end")
 			}
-
+			roomNumber := temp[0]
 			isStart := line == "##start"
 			isEnd := line == "##end"
 			if isStart {
@@ -70,48 +67,65 @@ func ColonY(content string) (*Colony, int, int) {
 			} else {
 				end = roomNumber
 			}
-			colony.Rooms = append(colony.Rooms, NewRoom(roomNumber, isStart, isEnd))
-
+			room := NewRoom(roomNumber, isStart, isEnd)
+			var e error
+			room.X, e = strconv.Atoi(temp[1])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates for start/end")
+			}
+			room.Y, e = strconv.Atoi(temp[2])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates for start/end")
+			}
+			colony.Rooms = append(colony.Rooms, room)
 		} else if strings.Contains(line, "-") {
-			continue // Connection lines are handled later
+			continue
 		} else {
 			temp := strings.Fields(strings.TrimSpace(line))
-			roomNumber, err := strconv.Atoi(temp[0])
-			if err != nil {
-				break
+			if len(temp) != 3 {
+				return nil, "", "", fmt.Errorf("invalid room format")
 			}
-			colony.Rooms = append(colony.Rooms, NewRoom(roomNumber, false, false))
+			roomNumber := temp[0]
+			room := NewRoom(roomNumber, false, false)
+			var e error
+			room.X, e = strconv.Atoi(temp[1])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates")
+			}
+			room.Y, e = strconv.Atoi(temp[2])
+			if e != nil {
+				return nil, "", "", fmt.Errorf("invalid room co-ordinates")
+			}
+			colony.Rooms = append(colony.Rooms, room)
 		}
 	}
 
-	// Parse connections
 	for _, line := range contentSlice {
-		temp := Split(strings.TrimSpace(line))
-		if len(temp) < 2 {
-			continue
-		}
-
-		roomA, _ := strconv.Atoi(temp[0])
-		roomB, _ := strconv.Atoi(temp[1])
-
-		for _, room := range colony.Rooms {
-			if room.number == roomA {
-				room.connections = append(room.connections, roomB)
+		if strings.Contains(line, "-") {
+			parts := strings.Split(line, "-")
+			if len(parts) != 2 {
+				return nil, "", "", fmt.Errorf("invalid connection format")
 			}
-			if room.number == roomB {
-				room.connections = append(room.connections, roomA)
+			roomA, roomB := parts[0], parts[1]
+
+			for _, room := range colony.Rooms {
+				if room.Number == roomA {
+					room.Connections = append(room.Connections, roomB)
+				}
+				if room.Number == roomB {
+					room.Connections = append(room.Connections, roomA)
+				}
 			}
 		}
 	}
 
-	return colony, start, end
+	return colony, start, end, nil
 }
 
-// Converts colony into an adjacency list
-func BuildGraph(colony *Colony) map[int][]int {
-	graph := make(map[int][]int)
+func BuildGraph(colony *Colony) map[string][]string {
+	graph := make(map[string][]string)
 	for _, room := range colony.Rooms {
-		graph[room.number] = room.connections
+		graph[room.Number] = room.Connections
 	}
 	return graph
 }

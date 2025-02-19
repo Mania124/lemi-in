@@ -1,18 +1,22 @@
 package api
 
+import "strings"
+
+// Split splits a string by the '-' delimiter and returns a slice of substrings.
 func Split(s string) []string {
-	var temp string
-	var fin []string
-	for i, c := range s {
+	var result []string
+	var builder strings.Builder
+
+	for _, c := range s {
 		if c == '-' {
-			fin = append(fin, temp)
-			temp = ""
+			result = append(result, builder.String())
+			builder.Reset()
 		} else {
-			temp += string(c)
-		}
-		if i == len(s)-1 {
-			fin = append(fin, temp)
+			builder.WriteRune(c)
 		}
 	}
-	return fin
+
+	// Append the last segment
+	result = append(result, builder.String())
+	return result
 }

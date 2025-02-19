@@ -7,23 +7,32 @@ import (
 	"strings"
 )
 
+var count = make(map[string]bool)
+
+// moved = make(map[int]int)
+
 // Finds the shortest path using BFS (no global visited)
-func BFS(graph map[int][]int, start, end int) []int {
+func BFS(graph map[string][]string, start, end string) []string {
 	queue := list.New()
-	queue.PushBack([]int{start})
+	queue.PushBack([]string{start})
 
 	for queue.Len() > 0 {
-		currentPath := queue.Remove(queue.Front()).([]int)
+		currentPath := queue.Remove(queue.Front()).([]string)
 		lastNode := currentPath[len(currentPath)-1]
 
 		if lastNode == end {
-			return currentPath
+			str := strings.Join(currentPath, "")
+			if !count[str] {
+				count[str] = true
+				return currentPath
+			}
+
 		}
 
 		// Explore neighbors not already in the current path (prevents cycles)
 		for _, neighbor := range graph[lastNode] {
 			if !contains(currentPath, neighbor) {
-				newPath := append([]int{}, currentPath...)
+				newPath := append([]string{}, currentPath...)
 				newPath = append(newPath, neighbor)
 				queue.PushBack(newPath)
 			}
@@ -33,8 +42,8 @@ func BFS(graph map[int][]int, start, end int) []int {
 }
 
 // Finds all non-overlapping paths by blocking nodes in found paths
-func FindAllPaths(graph map[int][]int, start, end int) [][]int {
-	var paths [][]int
+func FindAllPaths(graph map[string][]string, start, end string) [][]string {
+	var paths [][]string
 	tempGraph := copyGraph(graph) // Create a modifiable copy of the graph
 
 	// First try to find shortest paths
@@ -47,10 +56,11 @@ func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 
 		// Block nodes in this path except start and end
 		for i := 1; i < len(path)-1; i++ {
+
 			nodeToBlock := path[i]
 			// Remove the node from the graph
 			for u := range tempGraph {
-				var newNeighbors []int
+				var newNeighbors []string
 				for _, v := range tempGraph[u] {
 					if v != nodeToBlock {
 						newNeighbors = append(newNeighbors, v)
@@ -64,137 +74,138 @@ func FindAllPaths(graph map[int][]int, start, end int) [][]int {
 	return paths
 }
 
-// Distributes ants optimally across paths
-func DistributeAnts(paths [][]int, numAnts int) map[int][]int {
-	antAssignments := make(map[int][]int)
-	
-	// Find paths starting with rooms 2 and 3
-	var path2, path3 []int
-	for _, path := range paths {
-		if len(path) > 1 {
-			if path[1] == 2 {
-				path2 = path
-			} else if path[1] == 3 {
-				path3 = path
-			}
-		}
+// Distributes ants fairly, prioritizing shorter paths when possible
+func DistributeAnts(paths [][]string, numAnts int) map[int][]string {
+	antAssignments := make(map[int][]string) // Tracks assigned paths per ant
+	antsPerPath := make([]int, len(paths))   // Tracks number of ants per path
+	pathLengths := make([]int, len(paths))   // Store each path’s length
+
+	// Get the length of each path
+	for i, path := range paths {
+		pathLengths[i] = len(path) - 1 // Exclude starting node "0"
 	}
 
-	// Check if this is the complex graph (with rooms 4,5,6,7)
-	isComplexGraph := false
-	for _, path := range paths {
-		for _, node := range path {
-			if node >= 4 { // If we find nodes 4 or higher, it's the complex graph
-				isComplexGraph = true
-				break
+	// Assign ants dynamically, always preferring the least burdened shortest path
+	for antID := 1; antID <= numAnts; antID++ {
+		minIndex := 0
+		minLoad := antsPerPath[0] + pathLengths[0] // Consider path length + current load
+
+		for i := 1; i < len(paths); i++ {
+			currentLoad := antsPerPath[i] + pathLengths[i]
+			if currentLoad < minLoad {
+				minIndex = i
+				minLoad = currentLoad
 			}
 		}
-		if isComplexGraph {
-			break
-		}
-	}
 
-	// Assign paths to ants based on graph type
-	if path2 != nil && path3 != nil {
-		if isComplexGraph {
-			// For complex graph:
-			// Ant 1: path through 3
-			// Ant 2: path through 2
-			// Ant 3: path through 3
-			antAssignments[1] = path3
-			antAssignments[2] = path2
-			antAssignments[3] = path3
-		} else {
-			// For simple graph:
-			// Ant 1: path through 2
-			// Ant 2: path through 3
-			// Ant 3: path through 2
-			antAssignments[1] = path2
-			antAssignments[2] = path3
-			antAssignments[3] = path2
-		}
-	} else {
-		// Fallback to shortest path
-		sort.Slice(paths, func(i, j int) bool {
-			return len(paths[i]) < len(paths[j])
-		})
-		for antID := 1; antID <= numAnts; antID++ {
-			antAssignments[antID] = paths[0]
-		}
+		// Assign ant to the selected shortest available path
+		antAssignments[antID] = paths[minIndex][1:]
+		antsPerPath[minIndex]++ // Increase load for this path
 	}
 
 	return antAssignments
 }
 
-// Simulates ant movements step-by-step
-func MoveAnts(antAssignments map[int][]int) {
-	antSteps := make(map[int]int)    // Tracks each ant's current step
-	antStarted := make(map[int]bool) // Tracks if an ant has started moving
-	finished := false
-
-	// Start first two ants immediately
-	antStarted[1] = true
-	antStarted[2] = true
-
-	for !finished {
-		var moves []string
-		occupied := make(map[int]bool) // Tracks occupied rooms for this step
-		finished = true
-
-		// Process ants in order
-		for antID := 1; antID <= len(antAssignments); antID++ {
-			path := antAssignments[antID]
-			
-			// Skip if ant has reached the end
-			if antSteps[antID] >= len(path)-1 {
-				continue
+// group ants with similar paths together
+func AssignGroups(assignment map[int][]string) [][]int {
+	var tog [][]int
+	var gr []int
+	found := make(map[int]bool)
+	for _, v := range assignment {
+		for key := range assignment {
+			if compareSlices(assignment[key], v) && !found[key] {
+				gr = append(gr, key)
+				found[key] = true
 			}
+		}
+		if len(gr) != 0 {
+			sort.Ints(gr)
+			tog = append(tog, gr)
+			gr = []int{}
+		}
+	}
 
-			finished = false // We still have ants to move
+	sort.Slice(tog, func(i, j int) bool {
+		return len(tog[i]) > len(tog[j]) || tog[i][0] < tog[j][0]
+	})
+	return tog
+}
 
-			// Start ant 3 only after both ant 1 and 2 have moved one step
-			if antID == 3 && !antStarted[3] {
-				if antSteps[1] > 0 && antSteps[2] > 0 {
-					antStarted[3] = true
-				} else {
-					continue
+// Move prints elements cumulatively row by row.
+func Move(input [][]int, myMap map[int][]string) {
+	// Track how many elements we've used from each key in myMap
+	moved := make(map[int]int)
+
+	// Find max depth (longest list in input)
+	maxLen := 0
+	for _, v := range input {
+		if len(v) > maxLen {
+			maxLen = len(v)
+		}
+	}
+
+	// Print row by row, accumulating elements
+	for count := 0; ; count++ {
+		line := ""   // Collect output for this row
+		done := true // Track if all values are exhausted
+
+		for _, v := range input {
+			for j := 0; j <= count && j < len(v); j++ {
+				id := v[j] // Current list ID
+
+				// Ensure we do not exceed the mapped values
+				if moved[id] < len(myMap[id]) {
+					if line != "" {
+						line += " " // Add space before next value
+					}
+
+					// Append value to line
+					line += fmt.Sprintf("L%d-%s", id, myMap[id][moved[id]])
+
+					// Move to next element in `myMap`
+					moved[id]++
+					done = false // Not done yet, there is more data
 				}
 			}
-
-			// Skip if ant hasn't started
-			if !antStarted[antID] {
-				continue
-			}
-
-			// Get next position
-			currentPos := antSteps[antID]
-			nextNode := path[currentPos+1]
-
-			// Check if next room is available
-			if !occupied[nextNode] || nextNode == path[len(path)-1] {
-				occupied[nextNode] = true
-				antSteps[antID]++
-				moves = append(moves, fmt.Sprintf("L%d-%d", antID, nextNode))
-			}
 		}
 
-		if len(moves) > 0 {
-			fmt.Println(strings.Join(moves, " "))
+		if done {
+			break // Stop if all elements are exhausted
 		}
+
+		fmt.Println(line) // Print the accumulated row
 	}
 }
 
+// CompareSlices checks if two slices have the same elements and are of the same length.
+func compareSlices[T comparable](slice1, slice2 []T) bool {
+	// Check if the lengths are the same
+	if len(slice1) != len(slice2) {
+		return false
+	}
+
+	// Compare each element
+	for i := 0; i < len(slice1); i++ {
+		if slice1[i] != slice2[i] {
+			return false
+		}
+	}
+
+	// If all elements are the same, return true
+	return true
+}
+
 // Helper to deep-copy the graph
-func copyGraph(original map[int][]int) map[int][]int {
-	copied := make(map[int][]int)
+func copyGraph(original map[string][]string) map[string][]string {
+	copied := make(map[string][]string)
 	for u, neighbors := range original {
-		copied[u] = append([]int{}, neighbors...)
+		copied[u] = append([]string{}, neighbors...)
 	}
 	return copied
 }
 
 // Helper function to check if a value exists in a slice
-func contains(slice []int, value int) bool {
+func contains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
 			return true
