@@ -182,15 +182,6 @@ func compareSlices[T comparable](slice1, slice2 []T) bool {
 	return true
 }
 
-// Helper to deep-copy the graph
-func copyGraph(original map[string][]string) map[string][]string {
-	copied := make(map[string][]string)
-	for u, neighbors := range original {
-		copied[u] = append([]string{}, neighbors...)
-	}
-	return copied
-}
-
 // Helper function to check if a value exists in a slice
 func contains(slice []string, value string) bool {
 	for _, v := range slice {
