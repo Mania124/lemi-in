@@ -11,8 +11,8 @@ func TestBFS(t *testing.T) {
 		"2": {"1", "3"},
 		"3": {"2"},
 	}
-
-	path := BFS(graph, "0", "3")
+	found:=make(map[string]map[string]bool)
+	path := BFS(graph, "0", "3",found)
 	expected := []string{"0", "1", "2", "3"}
 
 	if !compareSlices(path, expected) {

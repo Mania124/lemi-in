@@ -4,15 +4,14 @@ import (
 	"container/list"
 	"fmt"
 	"sort"
-	"strings"
 )
 
-var count = make(map[string]bool)
+// var count = make(map[string]bool)
 
 // moved = make(map[int]int)
 
-// Finds the shortest path using BFS (no global visited)
-func BFS(graph map[string][]string, start, end string) []string {
+// BFS finds the shortest path while avoiding blocked edges
+func BFS(graph map[string][]string, start, end string, blockedEdges map[string]map[string]bool) []string {
 	queue := list.New()
 	queue.PushBack([]string{start})
 
@@ -21,53 +20,41 @@ func BFS(graph map[string][]string, start, end string) []string {
 		lastNode := currentPath[len(currentPath)-1]
 
 		if lastNode == end {
-			str := strings.Join(currentPath, "")
-			if !count[str] {
-				count[str] = true
-				return currentPath
-			}
-
+			return currentPath // Found a valid path
 		}
 
-		// Explore neighbors not already in the current path (prevents cycles)
+		// Explore neighbors, skipping blocked edges and cycles
 		for _, neighbor := range graph[lastNode] {
-			if !contains(currentPath, neighbor) {
+			if !blockedEdges[lastNode][neighbor] && !contains(currentPath, neighbor) {
 				newPath := append([]string{}, currentPath...)
 				newPath = append(newPath, neighbor)
 				queue.PushBack(newPath)
 			}
 		}
 	}
-	return nil
+	return nil // No valid path found
 }
 
-// Finds all non-overlapping paths by blocking nodes in found paths
+// Finds all non-overlapping paths from start to end
 func FindAllPaths(graph map[string][]string, start, end string) [][]string {
 	var paths [][]string
-	tempGraph := copyGraph(graph) // Create a modifiable copy of the graph
+	blockedEdges := make(map[string]map[string]bool)
 
-	// First try to find shortest paths
+	// Initialize blockedEdges for all nodes
+	for node := range graph {
+		blockedEdges[node] = make(map[string]bool)
+	}
+
 	for {
-		path := BFS(tempGraph, start, end)
+		path := BFS(graph, start, end, blockedEdges)
 		if path == nil {
-			break // No more paths
+			break // No more paths available
 		}
 		paths = append(paths, path)
 
-		// Block nodes in this path except start and end
-		for i := 1; i < len(path)-1; i++ {
-
-			nodeToBlock := path[i]
-			// Remove the node from the graph
-			for u := range tempGraph {
-				var newNeighbors []string
-				for _, v := range tempGraph[u] {
-					if v != nodeToBlock {
-						newNeighbors = append(newNeighbors, v)
-					}
-				}
-				tempGraph[u] = newNeighbors
-			}
+		// Block edges instead of entire nodes to allow more alternative paths
+		for j := 0; j < len(path)-1; j++ {
+			blockedEdges[path[j]][path[j+1]] = true
 		}
 	}
 

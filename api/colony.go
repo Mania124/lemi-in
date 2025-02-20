@@ -118,6 +118,10 @@ func ColonY(content string) (*Colony, string, string, error) {
 			}
 		}
 	}
+	err := ValidRooms(colony)
+	if err != nil {
+		return nil, "", "", err
+	}
 
 	return colony, start, end, nil
 }
@@ -128,4 +132,29 @@ func BuildGraph(colony *Colony) map[string][]string {
 		graph[room.Number] = room.Connections
 	}
 	return graph
+}
+
+func ValidRooms(colony *Colony) error {
+	// Create a lookup map for room existence
+	roomMap := make(map[string]*Room)
+	for _, room := range colony.Rooms {
+		roomMap[room.Number] = room
+	}
+
+	// Validate each room's connections
+	for _, room := range colony.Rooms {
+		for _, linkedRoom := range room.Connections {
+			// Check if a room links to itself
+			if room.Number == linkedRoom {
+				return fmt.Errorf("invalid room connection: room %q cannot link to itself", room.Number)
+			}
+
+			// Check if the linked room exists
+			if _, exists := roomMap[linkedRoom]; !exists {
+				return fmt.Errorf("invalid link: room %q links to non-existent room %q", room.Number, linkedRoom)
+			}
+		}
+	}
+
+	return nil // All rooms are valid
 }
