@@ -85,10 +85,7 @@ Feel free to submit issues and enhancement requests.
 
 ## Contributors
 
-- mmoffat
 - hshikuku
 - oragwelr
+- mmoffat
 
-## Repository
-
-[lem-in Repository](https://learn.zone01kisumu.ke/git/hshikuku/lem-in.git)
